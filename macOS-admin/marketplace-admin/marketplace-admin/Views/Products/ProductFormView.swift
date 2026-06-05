@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 @MainActor
 struct ProductFormView: View {
