@@ -13,8 +13,8 @@ struct ProductFormView: View {
     @State private var stock = ""
     @State private var category = ""
     @State private var imageURLs: [String] = []
-    @State private var selectedImage: NSImage? = nil
     @State private var isUploading = false
+    @State private var showingFilePicker = false
     @State private var errorMessage = ""
     @State private var isLoading = false
 
@@ -35,10 +35,9 @@ struct ProductFormView: View {
             }
             .textFieldStyle(.roundedBorder)
 
-            // Image section
             HStack(alignment: .top, spacing: 12) {
                 Button(isUploading ? "Uploading..." : "Add Image") {
-                    pickImage()
+                    showingFilePicker = true
                 }
                 .disabled(isUploading)
 
@@ -81,29 +80,31 @@ struct ProductFormView: View {
                 imageURLs = p.images
             }
         }
-    }
+        .fileImporter(
+            isPresented: $showingFilePicker,
+            allowedContentTypes: [.jpeg, .png, .heic, .image],
+            allowsMultipleSelection: false
+        ) { result in
+            guard let url = try? result.get().first else { return }
+            guard url.startAccessingSecurityScopedResource() else { return }
+            defer { url.stopAccessingSecurityScopedResource() }
+            guard let image = NSImage(contentsOf: url),
+                  let tiffData = image.tiffRepresentation,
+                  let bitmap = NSBitmapImageRep(data: tiffData),
+                  let jpegData = bitmap.representation(using: .jpeg, properties: [.compressionFactor: 0.8])
+            else { return }
 
-    private func pickImage() {
-        let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.jpeg, .png, .heic]
-        panel.allowsMultipleSelection = false
-        guard panel.runModal() == .OK, let url = panel.url,
-              let image = NSImage(contentsOf: url),
-              let tiffData = image.tiffRepresentation,
-              let bitmap = NSBitmapImageRep(data: tiffData),
-              let jpegData = bitmap.representation(using: .jpeg, properties: [.compressionFactor: 0.8])
-        else { return }
-
-        isUploading = true
-        Task {
-            do {
-                let uploadedURL = try await APIClient.shared.uploadImage(jpegData, filename: url.lastPathComponent)
-                imageURLs.append(uploadedURL)
-                print("[Form] imageURLs after upload: \(imageURLs)")
-            } catch {
-                errorMessage = error.localizedDescription
+            isUploading = true
+            Task {
+                do {
+                    let uploadedURL = try await APIClient.shared.uploadImage(jpegData, filename: url.lastPathComponent)
+                    imageURLs.append(uploadedURL)
+                    print("[Form] imageURLs after upload: \(imageURLs)")
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
+                isUploading = false
             }
-            isUploading = false
         }
     }
 
@@ -112,7 +113,7 @@ struct ProductFormView: View {
             errorMessage = "Invalid price or stock"
             return
         }
-        var body: [String: Any] = [
+        let body: [String: Any] = [
             "name": name,
             "description": description,
             "price": priceVal,
@@ -120,6 +121,7 @@ struct ProductFormView: View {
             "category": category,
             "images": imageURLs
         ]
+        print("[Form] Saving with imageURLs: \(imageURLs)")
         isLoading = true
         Task {
             do {

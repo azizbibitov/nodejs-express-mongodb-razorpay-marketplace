@@ -20,6 +20,10 @@ struct ContentView: View {
     var body: some View {
         if !isLoggedIn {
             LoginView { isLoggedIn = true }
+                .onAppear {
+                    APIClient.shared.loadSavedToken()
+                    if APIClient.shared.hasToken { isLoggedIn = true }
+                }
         } else {
             NavigationSplitView {
                 List(SidebarItem.allCases, selection: $selection) { item in

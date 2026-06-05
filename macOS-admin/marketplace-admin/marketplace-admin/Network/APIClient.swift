@@ -9,11 +9,19 @@ class APIClient: ObservableObject {
 
     func setToken(_ token: String) {
         self.token = token
+        KeychainManager.saveToken(token)
+    }
+
+    func loadSavedToken() {
+        self.token = KeychainManager.loadToken()
     }
 
     func clearToken() {
         self.token = nil
+        KeychainManager.deleteToken()
     }
+
+    var hasToken: Bool { token != nil }
 
     // MARK: - Auth
 
