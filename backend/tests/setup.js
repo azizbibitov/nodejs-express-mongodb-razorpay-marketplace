@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 beforeAll(async () => {
-  await mongoose.connect(process.env.MONGO_URI);
+  await mongoose.connect(process.env.TEST_MONGO_URI);
   const collections = await mongoose.connection.db.collections();
   for (const collection of collections) {
     await collection.deleteMany({});
