@@ -12,6 +12,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
     }
 }
 
+@MainActor
 struct ContentView: View {
     @State private var isLoggedIn = false
     @State private var selection: SidebarItem? = .products

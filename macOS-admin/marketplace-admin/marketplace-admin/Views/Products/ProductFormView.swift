@@ -1,5 +1,6 @@
 import SwiftUI
 
+@MainActor
 struct ProductFormView: View {
     let product: Product?
     let onSave: () async -> Void
@@ -70,12 +71,10 @@ struct ProductFormView: View {
                     _ = try await APIClient.shared.createProduct(body)
                 }
                 await onSave()
-                await MainActor.run { dismiss() }
+                dismiss()
             } catch {
-                await MainActor.run {
-                    errorMessage = error.localizedDescription
-                    isLoading = false
-                }
+                errorMessage = error.localizedDescription
+                isLoading = false
             }
         }
     }
