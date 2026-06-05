@@ -4,8 +4,8 @@ exports.createProduct = async (req, res) => {
   if (req.user.role !== 'seller') {
     return res.status(403).json({ message: 'Only sellers can create products' });
   }
-  const { name, description, price, stock, category } = req.body;
-  const product = await Product.create({ name, description, price, stock, category, seller: req.user.id });
+  const { name, description, price, stock, category, images } = req.body;
+  const product = await Product.create({ name, description, price, stock, category, images: images || [], seller: req.user.id });
   res.status(201).json(product);
 };
 
