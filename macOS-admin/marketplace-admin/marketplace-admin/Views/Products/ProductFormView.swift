@@ -99,6 +99,7 @@ struct ProductFormView: View {
             do {
                 let uploadedURL = try await APIClient.shared.uploadImage(jpegData, filename: url.lastPathComponent)
                 imageURLs.append(uploadedURL)
+                print("[Form] imageURLs after upload: \(imageURLs)")
             } catch {
                 errorMessage = error.localizedDescription
             }

@@ -67,8 +67,10 @@ class APIClient: ObservableObject {
             print("[API] Error: \(msg)")
             throw NSError(domain: "API", code: 0, userInfo: [NSLocalizedDescriptionKey: msg])
         }
+        print("[API] Upload response: \(String(data: data, encoding: .utf8) ?? "")")
         let result = try JSONDecoder().decode([String: String].self, from: data)
         guard let imageUrl = result["url"] else { throw URLError(.cannotParseResponse) }
+        print("[API] Image URL: \(imageUrl)")
         return imageUrl
     }
 
