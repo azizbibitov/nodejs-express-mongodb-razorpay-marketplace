@@ -63,22 +63,37 @@ class APIClient: ObservableObject {
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if let token { req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
         if let body { req.httpBody = try JSONSerialization.data(withJSONObject: body) }
+        print("[API] \(method) \(path)")
         let (data, response) = try await URLSession.shared.data(for: req)
-        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+        let http = response as? HTTPURLResponse
+        print("[API] \(method) \(path) -> \(http?.statusCode ?? -1)")
+        guard let http, (200...299).contains(http.statusCode) else {
             let msg = String(data: data, encoding: .utf8) ?? "Unknown error"
+            print("[API] Error: \(msg)")
             throw NSError(domain: "API", code: 0, userInfo: [NSLocalizedDescriptionKey: msg])
         }
+        print("[API] Response: \(String(data: data, encoding: .utf8) ?? "")")
         return data
     }
 
     private func get<T: Decodable>(_ path: String) async throws -> T {
         let data = try await request(path, method: "GET")
-        return try JSONDecoder().decode(T.self, from: data)
+        do {
+            return try JSONDecoder().decode(T.self, from: data)
+        } catch {
+            print("[API] Decode error on GET \(path): \(error)")
+            throw error
+        }
     }
 
     private func post<T: Decodable>(_ path: String, body: [String: Any]) async throws -> T {
         let data = try await request(path, method: "POST", body: body)
-        return try JSONDecoder().decode(T.self, from: data)
+        do {
+            return try JSONDecoder().decode(T.self, from: data)
+        } catch {
+            print("[API] Decode error on POST \(path): \(error)")
+            throw error
+        }
     }
 
     private func put<T: Decodable>(_ path: String, body: [String: Any]) async throws -> T {
