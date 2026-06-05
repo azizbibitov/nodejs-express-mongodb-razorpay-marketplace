@@ -1,24 +1,45 @@
-//
-//  ContentView.swift
-//  marketplace-admin
-//
-//  Created by Aziz Bibitov on 06.06.2026.
-//
-
 import SwiftUI
 
-struct ContentView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+enum SidebarItem: String, CaseIterable, Identifiable {
+    case products = "Products"
+    case orders = "Orders"
+    var id: String { rawValue }
+    var icon: String {
+        switch self {
+        case .products: return "shippingbox"
+        case .orders: return "list.clipboard"
         }
-        .padding()
     }
 }
 
-#Preview {
-    ContentView()
+struct ContentView: View {
+    @State private var isLoggedIn = false
+    @State private var selection: SidebarItem? = .products
+
+    var body: some View {
+        if !isLoggedIn {
+            LoginView { isLoggedIn = true }
+        } else {
+            NavigationSplitView {
+                List(SidebarItem.allCases, selection: $selection) { item in
+                    Label(item.rawValue, systemImage: item.icon)
+                        .tag(item)
+                }
+                .navigationSplitViewColumnWidth(min: 160, ideal: 180)
+                Spacer()
+                Button("Logout") {
+                    APIClient.shared.clearToken()
+                    isLoggedIn = false
+                }
+                .padding()
+            } detail: {
+                switch selection {
+                case .products: ProductsView()
+                case .orders: OrdersView()
+                case nil: Text("Select a section")
+                }
+            }
+            .frame(minWidth: 900, minHeight: 600)
+        }
+    }
 }
