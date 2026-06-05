@@ -26,6 +26,21 @@ struct ProductsView: View {
                 Text(errorMessage).foregroundColor(.red).padding()
             } else {
                 Table(products) {
+                    TableColumn("Image") { product in
+                        if let url = product.images.first, let imageURL = URL(string: url) {
+                            AsyncImage(url: imageURL) { image in
+                                image.resizable().scaledToFill()
+                            } placeholder: {
+                                Color.gray.opacity(0.2)
+                            }
+                            .frame(width: 40, height: 40)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                        } else {
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color.gray.opacity(0.2))
+                                .frame(width: 40, height: 40)
+                        }
+                    }
                     TableColumn("Name", value: \.name)
                     TableColumn("Category", value: \.category)
                     TableColumn("Price") { product in

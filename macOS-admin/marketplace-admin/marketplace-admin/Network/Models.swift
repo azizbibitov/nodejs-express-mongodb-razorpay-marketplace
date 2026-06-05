@@ -24,10 +24,11 @@ struct Product: Codable, Identifiable {
     var price: Double
     var stock: Int
     var category: String
+    var images: [String]
 
     enum CodingKeys: String, CodingKey {
         case id = "_id"
-        case name, description, price, stock, category
+        case name, description, price, stock, category, images
     }
 }
 

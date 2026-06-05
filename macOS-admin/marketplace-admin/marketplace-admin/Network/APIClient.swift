@@ -40,6 +40,38 @@ class APIClient: ObservableObject {
         try await delete("/products/\(id)")
     }
 
+    // MARK: - Upload
+
+    func uploadImage(_ imageData: Data, filename: String) async throws -> String {
+        guard let url = URL(string: baseURL + "/upload/image") else { throw URLError(.badURL) }
+        let boundary = UUID().uuidString
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        if let token { req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
+
+        var body = Data()
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"image\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append(imageData)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        req.httpBody = body
+
+        print("[API] POST /upload/image")
+        let (data, response) = try await URLSession.shared.data(for: req)
+        let http = response as? HTTPURLResponse
+        print("[API] POST /upload/image -> \(http?.statusCode ?? -1)")
+        guard let http, (200...299).contains(http.statusCode) else {
+            let msg = String(data: data, encoding: .utf8) ?? "Unknown error"
+            print("[API] Error: \(msg)")
+            throw NSError(domain: "API", code: 0, userInfo: [NSLocalizedDescriptionKey: msg])
+        }
+        let result = try JSONDecoder().decode([String: String].self, from: data)
+        guard let imageUrl = result["url"] else { throw URLError(.cannotParseResponse) }
+        return imageUrl
+    }
+
     // MARK: - Orders
 
     func getSellerOrders() async throws -> [Order] {
