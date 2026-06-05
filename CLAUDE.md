@@ -2,35 +2,45 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Commands
+## Project Structure
 
-All commands must be run from the `backend/` directory.
+Three separate projects in one repo:
+
+- `backend/` - Node.js/Express API
+- `iOS-client/` - SwiftUI iOS buyer app
+- `macOS-admin/` - SwiftUI macOS admin app
+
+## Backend Commands
+
+All commands from `backend/` directory:
 
 ```bash
-npm run dev      # start server with nodemon (auto-restart on file changes)
-npm start        # start server without auto-restart
-npm test         # run all Jest tests
+npm run dev      # start with nodemon (auto-restart)
+npm start        # production
+npm test         # all 25 Jest tests
+npx jest tests/auth.test.js --forceExit   # single file
 ```
 
-Run a single test file:
-```bash
-npx jest tests/auth.test.js --forceExit
-```
+## Backend Environment
 
-## Environment
-
-Requires a `.env` file in `backend/`:
+`backend/.env` requires:
 
 ```
 PORT=3000
-MONGO_URI=mongodb+srv://...
+MONGO_URI=...marketplace database...
+TEST_MONGO_URI=...marketplace-test database...
 RAZORPAY_KEY_ID=...
 RAZORPAY_KEY_SECRET=...
 RAZORPAY_WEBHOOK_SECRET=...
 JWT_SECRET=...
+CLOUDINARY_CLOUD_NAME=...
+CLOUDINARY_API_KEY=...
+CLOUDINARY_API_SECRET=...
 ```
 
-## Architecture
+`TEST_MONGO_URI` points to a separate `marketplace-test` database so tests never touch real data.
+
+## Backend Architecture
 
 `app.js` configures Express and registers routes. `server.js` connects to MongoDB and starts the listener. Tests import `app.js` directly via Supertest - never `server.js`.
 
@@ -38,35 +48,52 @@ JWT_SECRET=...
 - `models/` - Mongoose schema (Data tier)
 - `controllers/` - business logic (Service tier)
 - `routes/` - Express router wiring (Web tier)
+- `middleware/auth.js` - JWT verification, sets `req.user = { id, role }`
+- `middleware/upload.js` - multer, memory storage, 5MB image limit
 
-`middleware/auth.js` - JWT middleware. Attach to any route that requires a logged-in user via `router.method('/path', auth, controller)`. After verification it sets `req.user = { id, role }`.
+## Image Upload Flow
+
+`POST /api/upload/image` accepts `multipart/form-data` with field `image`. Multer stores file in memory as a Buffer, then `uploadController.js` streams it to Cloudinary via `upload_stream`. Returns `{ url }`. The URL is stored in `Product.images[]`.
+
+Cloudinary mock in tests: `jest.mock('cloudinary')` in `upload.test.js`.
 
 ## Payment Flow
 
-Razorpay payment is a 3-step sequence:
+Razorpay amounts are always in **paise** (INR × 100).
 
-1. `POST /api/payments/create` - creates a Razorpay order, stores `razorpayOrderId` on our Order document
-2. iOS Razorpay SDK shows payment UI using that order ID
-3. `POST /api/payments/verify` - verifies HMAC-SHA256 signature of `razorpayOrderId|razorpayPaymentId`, marks order as `paid`, decrements product stock
+1. `POST /api/payments/create` - creates Razorpay order, stores `razorpayOrderId` on Order
+2. iOS Razorpay SDK shows payment UI
+3. `POST /api/payments/verify` - verifies HMAC-SHA256 of `razorpayOrderId|razorpayPaymentId`, marks order `paid`, decrements stock
 
-`POST /api/payments/webhook` is a server-side backup - Razorpay calls it directly for `payment.captured` and `payment.failed` events. This route uses `express.raw()` (registered before `express.json()` in `app.js`) because webhook signature verification requires the raw request body as a Buffer.
-
-Razorpay amounts are always in **paise** (multiply INR by 100).
+`POST /api/payments/webhook` uses `express.raw()` (registered before `express.json()` in `app.js`) because signature verification needs raw Buffer body.
 
 ## Order Status Flow
 
 ```
-pending → paid → shipped → delivered
-                         → refunded
-       → cancelled (payment failed)
+pending -> paid -> shipped -> delivered
+                           -> refunded
+        -> cancelled (payment failed)
 ```
-
-Only sellers can update status to `shipped`/`delivered`. Only sellers can initiate refunds (order must be `paid`).
 
 ## Testing
 
-`tests/setup.js` connects to the real Atlas database before all tests and wipes all collections before and after. Razorpay is mocked with `jest.mock('razorpay')` in `payments.test.js` so no real API calls are made. Tests run sequentially (`--runInBand`) because they share the same database.
+Tests use `TEST_MONGO_URI` (separate DB). `setup.js` wipes all collections before and after each suite. Razorpay and Cloudinary are mocked - no real API calls in tests. Tests run sequentially (`--runInBand`).
 
-## Local iOS Development
+## macOS Admin App
 
-Run `npm run dev` and use `http://<mac-local-ip>:3000/api` as the base URL in the iOS app. Find your local IP with `ipconfig getifaddr en0`. iPhone and Mac must be on the same WiFi.
+Located in `macOS-admin/marketplace-admin/marketplace-admin/`.
+
+- `Network/APIClient.swift` - all HTTP calls, `multipart/form-data` upload, debug logging
+- `Network/Models.swift` - `User`, `Product`, `Order`, `AuthResponse` Codable structs
+- `Network/KeychainManager.swift` - JWT token persistence across app restarts
+- `Views/Login/` - `LoginView.swift`
+- `Views/Products/` - `ProductsView.swift`, `ProductFormView.swift`
+- `Views/Orders/` - `OrdersView.swift`
+
+All views are `@MainActor` to prevent threading crashes. Uses `.fileImporter()` for image picking (not `NSOpenPanel.runModal()` which blocks the main thread and resets SwiftUI state).
+
+`User.id` maps from `_id` in JSON via `CodingKeys`. Auth response and MongoDB documents both use `_id`.
+
+## Local Development
+
+Run backend with `npm run dev`, use `http://<mac-ip>:3000/api` as base URL in Swift. Find IP with `ipconfig getifaddr en0`. Mac and iPhone/device must be on same WiFi.
