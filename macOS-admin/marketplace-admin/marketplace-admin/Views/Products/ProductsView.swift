@@ -1,5 +1,6 @@
 import SwiftUI
 
+@MainActor
 struct ProductsView: View {
     @State private var products: [Product] = []
     @State private var isLoading = false

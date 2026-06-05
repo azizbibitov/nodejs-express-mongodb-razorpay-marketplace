@@ -1,5 +1,6 @@
 import SwiftUI
 
+@MainActor
 struct LoginView: View {
     @State private var email = ""
     @State private var password = ""
@@ -48,12 +49,10 @@ struct LoginView: View {
             do {
                 let response = try await APIClient.shared.login(email: email, password: password)
                 APIClient.shared.setToken(response.token)
-                await MainActor.run { onLogin() }
+                onLogin()
             } catch {
-                await MainActor.run {
-                    errorMessage = error.localizedDescription
-                    isLoading = false
-                }
+                errorMessage = error.localizedDescription
+                isLoading = false
             }
         }
     }
