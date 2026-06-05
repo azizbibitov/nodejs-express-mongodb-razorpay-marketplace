@@ -15,7 +15,7 @@ exports.register = async (req, res) => {
     expiresIn: '7d',
   });
 
-  res.status(201).json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+  res.status(201).json({ token, user: { id: user._id, name: user.name, role: user.role } });
 };
 
 exports.login = async (req, res) => {
@@ -31,5 +31,5 @@ exports.login = async (req, res) => {
     expiresIn: '7d',
   });
 
-  res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+  res.json({ token, user: { id: user._id, name: user.name, role: user.role } });
 };
