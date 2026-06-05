@@ -8,6 +8,9 @@ const paymentRoutes = require('./routes/payments');
 
 const app = express();
 
+// Webhook needs raw body for signature verification - must come before express.json()
+app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
