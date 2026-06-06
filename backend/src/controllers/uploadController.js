@@ -1,21 +1,11 @@
-const cloudinary = require('cloudinary').v2;
+const storage = require('../services/storage/CloudinaryStorage');
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-exports.uploadImage = (req, res) => {
+exports.uploadImage = async (req, res) => {
   if (!req.file) return res.status(400).json({ message: 'No file provided' });
-
-  const stream = cloudinary.uploader.upload_stream(
-    { folder: 'marketplace/products' },
-    (error, result) => {
-      if (error) return res.status(500).json({ message: error.message });
-      res.json({ url: result.secure_url });
-    }
-  );
-
-  stream.end(req.file.buffer);
+  try {
+    const result = await storage.upload(req.file.buffer, req.file.originalname);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };

@@ -19,11 +19,17 @@ exports.createRazorpayOrder = async (req, res) => {
     return res.status(400).json({ message: 'Order is not in pending state' });
   }
 
-  const razorpayOrder = await razorpay.orders.create({
-    amount: Math.round(order.totalAmount * 100), // Razorpay uses paise (1 INR = 100 paise)
-    currency: 'INR',
-    receipt: order._id.toString(),
-  });
+  let razorpayOrder;
+  try {
+    razorpayOrder = await razorpay.orders.create({
+      amount: Math.round(order.totalAmount * 100),
+      currency: 'INR',
+      receipt: order._id.toString(),
+    });
+  } catch (err) {
+    console.error('Razorpay error:', err);
+    return res.status(502).json({ message: 'Payment gateway error. Check Razorpay credentials.' });
+  }
 
   order.razorpayOrderId = razorpayOrder.id;
   await order.save();

@@ -1,5 +1,11 @@
 require('./setup');
 const request = require('supertest');
+
+jest.mock('../src/services/storage/CloudinaryStorage', () => ({
+  upload: jest.fn().mockResolvedValue({ url: 'https://test.com/img.jpg', publicId: 'test/img' }),
+  delete: jest.fn().mockResolvedValue(),
+}));
+
 const app = require('../src/app');
 
 describe('Products', () => {

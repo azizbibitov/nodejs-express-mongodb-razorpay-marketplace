@@ -50,7 +50,7 @@ class APIClient: ObservableObject {
 
     // MARK: - Upload
 
-    func uploadImage(_ imageData: Data, filename: String) async throws -> String {
+    func uploadImage(_ imageData: Data, filename: String) async throws -> ProductImage {
         guard let url = URL(string: baseURL + "/upload/image") else { throw URLError(.badURL) }
         let boundary = UUID().uuidString
         var req = URLRequest(url: url)
@@ -76,10 +76,7 @@ class APIClient: ObservableObject {
             throw NSError(domain: "API", code: 0, userInfo: [NSLocalizedDescriptionKey: msg])
         }
         print("[API] Upload response: \(String(data: data, encoding: .utf8) ?? "")")
-        let result = try JSONDecoder().decode([String: String].self, from: data)
-        guard let imageUrl = result["url"] else { throw URLError(.cannotParseResponse) }
-        print("[API] Image URL: \(imageUrl)")
-        return imageUrl
+        return try JSONDecoder().decode(ProductImage.self, from: data)
     }
 
     // MARK: - Orders

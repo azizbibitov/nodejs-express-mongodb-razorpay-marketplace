@@ -9,37 +9,67 @@ struct LoginView: View {
     var onLogin: () -> Void
 
     var body: some View {
-        VStack(spacing: 20) {
-            Text("Marketplace Admin")
-                .font(.largeTitle)
-                .fontWeight(.bold)
+        ZStack {
+            Color(NSColor.underPageBackgroundColor).ignoresSafeArea()
 
-            TextField("Email", text: $email)
-                .textFieldStyle(.roundedBorder)
-                .frame(width: 300)
+            VStack(spacing: 28) {
+                VStack(spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color.brand)
+                            .frame(width: 64, height: 64)
+                        Image(systemName: "storefront")
+                            .font(.system(size: 26, weight: .medium))
+                            .foregroundStyle(.white)
+                    }
 
-            SecureField("Password", text: $password)
-                .textFieldStyle(.roundedBorder)
-                .frame(width: 300)
+                    VStack(spacing: 4) {
+                        Text("Marketplace Admin")
+                            .font(.title2).fontWeight(.bold)
+                        Text("Manage your store")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
 
-            if !errorMessage.isEmpty {
-                Text(errorMessage)
-                    .foregroundColor(.red)
-                    .font(.caption)
-            }
+                VStack(spacing: 10) {
+                    TextField("Email", text: $email)
+                        .textFieldStyle(.roundedBorder)
+                    SecureField("Password", text: $password)
+                        .textFieldStyle(.roundedBorder)
+                }
 
-            Button(action: login) {
-                if isLoading {
-                    ProgressView()
-                } else {
-                    Text("Login")
-                        .frame(width: 100)
+                VStack(spacing: 12) {
+                    if !errorMessage.isEmpty {
+                        Text(errorMessage)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
+                    Button(action: login) {
+                        Group {
+                            if isLoading {
+                                ProgressView().tint(.white).scaleEffect(0.85)
+                            } else {
+                                Text("Sign In").fontWeight(.semibold)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.brand)
+                    .controlSize(.large)
+                    .disabled(isLoading || email.isEmpty || password.isEmpty)
                 }
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(isLoading || email.isEmpty || password.isEmpty)
+            .padding(36)
+            .frame(width: 340)
+            .background(Color(NSColor.windowBackgroundColor))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .shadow(color: .black.opacity(0.12), radius: 24, y: 8)
         }
-        .frame(width: 400, height: 300)
+        .frame(width: 520, height: 420)
     }
 
     private func login() {

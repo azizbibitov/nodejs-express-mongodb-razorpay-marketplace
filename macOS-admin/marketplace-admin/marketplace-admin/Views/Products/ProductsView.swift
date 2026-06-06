@@ -9,53 +9,106 @@ struct ProductsView: View {
     @State private var selectedProduct: Product? = nil
 
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(spacing: 0) {
             HStack {
-                Text("Products")
-                    .font(.title)
-                    .fontWeight(.bold)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Products")
+                        .font(.title2).fontWeight(.bold)
+                    if !products.isEmpty {
+                        Text("\(products.count) items")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 Spacer()
-                Button("Add Product") { showingForm = true }
-                    .buttonStyle(.borderedProminent)
+                Button {
+                    showingForm = true
+                } label: {
+                    Label("Add Product", systemImage: "plus")
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.brand)
             }
-            .padding()
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+
+            Divider()
 
             if isLoading {
-                ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if !errorMessage.isEmpty {
-                Text(errorMessage).foregroundColor(.red).padding()
+                ContentUnavailableView(
+                    "Something went wrong",
+                    systemImage: "exclamationmark.triangle",
+                    description: Text(errorMessage)
+                )
+            } else if products.isEmpty {
+                ContentUnavailableView(
+                    "No Products",
+                    systemImage: "shippingbox",
+                    description: Text("Add your first product to get started.")
+                )
             } else {
                 Table(products) {
-                    TableColumn("Image") { product in
-                        if let url = product.images.first, let imageURL = URL(string: url) {
+                    TableColumn("") { product in
+                        if let imageURL = product.images.first.flatMap({ URL(string: $0.url) }) {
                             AsyncImage(url: imageURL) { image in
                                 image.resizable().scaledToFill()
                             } placeholder: {
-                                Color.gray.opacity(0.2)
+                                Color(NSColor.separatorColor)
                             }
-                            .frame(width: 40, height: 40)
+                            .frame(width: 36, height: 36)
                             .clipShape(RoundedRectangle(cornerRadius: 6))
                         } else {
                             RoundedRectangle(cornerRadius: 6)
-                                .fill(Color.gray.opacity(0.2))
-                                .frame(width: 40, height: 40)
+                                .fill(Color(NSColor.quaternaryLabelColor))
+                                .frame(width: 36, height: 36)
+                                .overlay {
+                                    Image(systemName: "photo")
+                                        .font(.caption)
+                                        .foregroundStyle(.tertiary)
+                                }
                         }
                     }
+                    .width(48)
+
                     TableColumn("Name", value: \.name)
                     TableColumn("Category", value: \.category)
+
                     TableColumn("Price") { product in
                         Text(String(format: "₹%.2f", product.price))
+                            .monospacedDigit()
                     }
+
                     TableColumn("Stock") { product in
-                        Text("\(product.stock)")
-                    }
-                    TableColumn("Actions") { product in
-                        HStack {
-                            Button("Edit") { selectedProduct = product }
-                            Button("Delete") { deleteProduct(product) }
-                                .foregroundColor(.red)
+                        HStack(spacing: 6) {
+                            Text("\(product.stock)").monospacedDigit()
+                            if product.stock == 0 {
+                                stockBadge("Out", color: .red)
+                            } else if product.stock < 5 {
+                                stockBadge("Low", color: .orange)
+                            }
                         }
                     }
+
+                    TableColumn("Actions") { product in
+                        HStack(spacing: 6) {
+                            Button { selectedProduct = product } label: {
+                                Image(systemName: "pencil")
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+
+                            Button(role: .destructive) { deleteProduct(product) } label: {
+                                Image(systemName: "trash")
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                            .tint(.red)
+                        }
+                    }
+                    .width(80)
                 }
             }
         }
@@ -68,8 +121,19 @@ struct ProductsView: View {
         }
     }
 
+    @ViewBuilder
+    private func stockBadge(_ label: String, color: Color) -> some View {
+        Text(label)
+            .font(.caption2).fontWeight(.medium)
+            .padding(.horizontal, 5).padding(.vertical, 2)
+            .background(color.opacity(0.12))
+            .foregroundStyle(color)
+            .clipShape(Capsule())
+    }
+
     private func loadProducts() async {
         isLoading = true
+        errorMessage = ""
         do {
             products = try await APIClient.shared.getProducts()
         } catch {

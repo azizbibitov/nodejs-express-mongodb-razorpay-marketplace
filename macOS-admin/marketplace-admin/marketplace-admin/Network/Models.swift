@@ -17,6 +17,12 @@ struct AuthResponse: Codable {
     let user: User
 }
 
+struct ProductImage: Codable, Identifiable {
+    let url: String
+    let publicId: String
+    var id: String { publicId }
+}
+
 struct Product: Codable, Identifiable {
     let id: String
     var name: String
@@ -24,7 +30,7 @@ struct Product: Codable, Identifiable {
     var price: Double
     var stock: Int
     var category: String
-    var images: [String]
+    var images: [ProductImage]
 
     enum CodingKeys: String, CodingKey {
         case id = "_id"
