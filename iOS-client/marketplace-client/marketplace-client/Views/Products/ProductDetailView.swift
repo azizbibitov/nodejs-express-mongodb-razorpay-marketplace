@@ -12,7 +12,7 @@ struct ProductDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                // Images pager
+                // Image pager
                 if product.images.isEmpty {
                     Color(.systemGray5)
                         .frame(height: 300)
@@ -50,12 +50,10 @@ struct ProductDetailView: View {
                             .foregroundStyle(Color.brand)
                     }
 
-                    // Stock badge
                     stockBadge
 
                     Divider()
 
-                    // Description
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Description")
                             .font(.subheadline).fontWeight(.semibold)
@@ -64,10 +62,8 @@ struct ProductDetailView: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    Divider()
-
-                    // Quantity
                     if product.stock > 0 {
+                        Divider()
                         HStack {
                             Text("Quantity")
                                 .font(.subheadline).fontWeight(.semibold)
@@ -83,28 +79,39 @@ struct ProductDetailView: View {
                             .foregroundStyle(.red)
                     }
 
-                    // Buy button
-                    Button(action: placeOrder) {
-                        Group {
-                            if isOrdering {
-                                ProgressView().tint(.white)
-                            } else {
-                                Text(product.stock == 0 ? "Out of Stock" : "Buy Now - ₹\(String(format: "%.2f", product.price * Double(quantity)))")
-                                    .fontWeight(.semibold)
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 50)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Color.brand)
-                    .disabled(isOrdering || product.stock == 0)
+                    // Bottom padding so content clears the pinned button
+                    Color.clear.frame(height: 80)
                 }
                 .padding(20)
             }
         }
         .ignoresSafeArea(edges: .top)
         .navigationBarTitleDisplayMode(.inline)
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: 0) {
+                Divider()
+                Button(action: placeOrder) {
+                    Group {
+                        if isOrdering {
+                            ProgressView().tint(.white)
+                        } else {
+                            Text(product.stock == 0
+                                 ? "Out of Stock"
+                                 : "Buy Now  ·  ₹\(String(format: "%.2f", product.price * Double(quantity)))")
+                                .fontWeight(.semibold)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Color.brand)
+                .disabled(isOrdering || product.stock == 0)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+            }
+            .background(.ultraThinMaterial)
+        }
         .sheet(isPresented: $showingPayment) {
             if let order = createdOrder {
                 PaymentView(order: order, productName: product.name) {

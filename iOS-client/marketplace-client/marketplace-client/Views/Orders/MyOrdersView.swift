@@ -74,6 +74,10 @@ private struct OrderRow: View {
                     Text("Qty: \(order.quantity)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+
+                    Text(formattedDate)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
                 }
             }
 
@@ -111,4 +115,14 @@ private struct OrderRow: View {
     }
 
     private var statusLabel: String { order.status.capitalized }
+
+    private var formattedDate: String {
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        guard let date = iso.date(from: order.createdAt) else { return "" }
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter.string(from: date)
+    }
 }

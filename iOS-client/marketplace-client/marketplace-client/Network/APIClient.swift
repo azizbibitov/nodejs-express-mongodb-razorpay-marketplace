@@ -18,9 +18,21 @@ class APIClient {
     func clearToken() {
         self.token = nil
         KeychainManager.deleteToken()
+        UserDefaults.standard.removeObject(forKey: "saved_user")
     }
 
     var hasToken: Bool { token != nil }
+
+    func saveUser(_ user: User) {
+        if let data = try? JSONEncoder().encode(user) {
+            UserDefaults.standard.set(data, forKey: "saved_user")
+        }
+    }
+
+    func loadSavedUser() -> User? {
+        guard let data = UserDefaults.standard.data(forKey: "saved_user") else { return nil }
+        return try? JSONDecoder().decode(User.self, from: data)
+    }
 
     // MARK: - Auth
 

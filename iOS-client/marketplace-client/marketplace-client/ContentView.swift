@@ -17,7 +17,10 @@ struct ContentView: View {
         }
         .onAppear {
             APIClient.shared.loadSavedToken()
-            // Token exists but we don't have user info cached - will re-login
+            if APIClient.shared.hasToken, let user = APIClient.shared.loadSavedUser() {
+                currentUser = user
+                isLoggedIn = true
+            }
         }
     }
 

@@ -111,6 +111,7 @@ struct AuthView: View {
                     response = try await APIClient.shared.login(email: email, password: password)
                 }
                 APIClient.shared.setToken(response.token)
+                APIClient.shared.saveUser(response.user)
                 onAuth(response.user)
             } catch {
                 errorMessage = error.localizedDescription

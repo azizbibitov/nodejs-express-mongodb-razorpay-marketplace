@@ -21,6 +21,11 @@ struct ProductsView: View {
                     }
                 }
                 Spacer()
+                Button { Task { await loadProducts() } } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .buttonStyle(.bordered)
+
                 Button {
                     showingForm = true
                 } label: {
