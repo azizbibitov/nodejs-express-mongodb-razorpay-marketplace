@@ -8,6 +8,26 @@ A full-stack marketplace with three components:
 
 ---
 
+## Screenshots
+
+### iOS Buyer App
+
+| Shop | Product Detail | Checkout | Payment Success |
+|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/ios-shop.png" width="200"> | <img src="docs/screenshots/ios-product-detail.png" width="200"> | <img src="docs/screenshots/ios-checkout.png" width="200"> | <img src="docs/screenshots/ios-payment-success.png" width="200"> |
+
+| Account | Transactions | Order Statuses |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/ios-account.png" width="200"> | <img src="docs/screenshots/ios-transactions.png" width="200"> | <img src="docs/screenshots/ios-order-status.png" width="200"> |
+
+### macOS Admin App
+
+| Products | Orders |
+|:---:|:---:|
+| <img src="docs/screenshots/macos-products.png" width="420"> | <img src="docs/screenshots/macos-orders.png" width="420"> |
+
+---
+
 ## Backend
 
 ### Tech Stack
