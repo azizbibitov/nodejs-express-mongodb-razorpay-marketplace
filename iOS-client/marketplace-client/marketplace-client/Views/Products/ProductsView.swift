@@ -64,23 +64,26 @@ private struct ProductCard: View {
         VStack(alignment: .leading, spacing: 0) {
             // Image
             ZStack(alignment: .topTrailing) {
-                if let imageURL = product.images.first.flatMap({ URL(string: $0.url) }) {
-                    AsyncImage(url: imageURL) { image in
-                        image.resizable().scaledToFill()
-                    } placeholder: {
-                        Color(.systemGray5)
-                    }
+                // A definite-size base view (full cell width x 160) defines the
+                // layout. The image is rendered as an overlay so it can fill and
+                // crop without its aspect ratio widening the grid cell.
+                Color(.systemGray5)
+                    .frame(maxWidth: .infinity)
                     .frame(height: 160)
-                    .clipped()
-                } else {
-                    Color(.systemGray5)
-                        .frame(height: 160)
-                        .overlay {
+                    .overlay {
+                        if let imageURL = product.images.first.flatMap({ URL(string: $0.url) }) {
+                            AsyncImage(url: imageURL) { image in
+                                image.resizable().scaledToFill()
+                            } placeholder: {
+                                Color(.systemGray5)
+                            }
+                        } else {
                             Image(systemName: "photo")
                                 .foregroundStyle(.tertiary)
                                 .font(.largeTitle)
                         }
-                }
+                    }
+                    .clipped()
 
                 if product.stock == 0 {
                     Text("Out of stock")
