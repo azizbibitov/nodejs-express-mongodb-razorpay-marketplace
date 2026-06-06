@@ -60,7 +60,7 @@ struct ProductFormView: View {
                     GroupBox {
                         HStack(spacing: 16) {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("Price (₹)").font(.caption).foregroundStyle(.secondary)
+                                Text("Price ($)").font(.caption).foregroundStyle(.secondary)
                                 TextField("0.00", text: $price)
                                     .textFieldStyle(.roundedBorder)
                             }

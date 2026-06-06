@@ -67,7 +67,7 @@ class APIClient {
     }
 
     func testPay(orderId: String) async throws {
-        let _: [String: String] = try await post("/payments/test-pay", body: ["orderId": orderId])
+        _ = try await request("/payments/test-pay", method: "POST", body: ["orderId": orderId])
     }
 
     func verifyPayment(orderId: String, razorpayOrderId: String, razorpayPaymentId: String, razorpaySignature: String) async throws {

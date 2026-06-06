@@ -62,7 +62,7 @@ struct OrdersView: View {
                     .width(40)
 
                     TableColumn("Amount") { order in
-                        Text(String(format: "₹%.2f", order.totalAmount))
+                        Text(String(format: "$%.2f", order.totalAmount))
                             .monospacedDigit()
                     }
 

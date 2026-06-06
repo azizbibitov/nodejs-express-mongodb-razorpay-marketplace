@@ -15,21 +15,49 @@ struct MyOrdersView: View {
                     ContentUnavailableView("Error", systemImage: "exclamationmark.triangle", description: Text(errorMessage))
                 } else if orders.isEmpty {
                     ContentUnavailableView(
-                        "No Orders Yet",
-                        systemImage: "bag",
-                        description: Text("Browse the shop and place your first order.")
+                        "No Transactions",
+                        systemImage: "creditcard",
+                        description: Text("Your payment history will appear here.")
                     )
                 } else {
-                    List(orders) { order in
-                        OrderRow(order: order)
+                    List {
+                        ForEach(groupedByMonth, id: \.month) { section in
+                            Section(section.month) {
+                                ForEach(section.orders) { order in
+                                    TransactionRow(order: order)
+                                }
+                            }
+                        }
                     }
                     .listStyle(.insetGrouped)
                 }
             }
-            .navigationTitle("My Orders")
+            .navigationTitle("Transactions")
             .task { await loadOrders() }
             .refreshable { await loadOrders() }
         }
+    }
+
+    private var groupedByMonth: [(month: String, orders: [Order])] {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        var groups: [(month: String, orders: [Order])] = []
+        var seen: [String: Int] = [:]
+
+        for order in orders {
+            let date = iso.date(from: order.createdAt) ?? Date()
+            let month = formatter.string(from: date)
+            if let idx = seen[month] {
+                groups[idx].orders.append(order)
+            } else {
+                seen[month] = groups.count
+                groups.append((month: month, orders: [order]))
+            }
+        }
+        return groups
     }
 
     private func loadOrders() async {
@@ -43,49 +71,64 @@ struct MyOrdersView: View {
     }
 }
 
-private struct OrderRow: View {
+private struct TransactionRow: View {
     let order: Order
 
     var body: some View {
         HStack(spacing: 14) {
-            // Status icon
             ZStack {
                 Circle()
                     .fill(statusColor.opacity(0.12))
-                    .frame(width: 44, height: 44)
+                    .frame(width: 46, height: 46)
                 Image(systemName: statusIcon)
                     .foregroundStyle(statusColor)
-                    .font(.system(size: 18))
+                    .font(.system(size: 19))
             }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(order.product?.name ?? "Product")
+            VStack(alignment: .leading, spacing: 3) {
+                Text(order.product?.name ?? "Unknown Product")
                     .font(.subheadline).fontWeight(.semibold)
                     .lineLimit(1)
 
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     Text(statusLabel)
                         .font(.caption).fontWeight(.medium)
-                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .padding(.horizontal, 7).padding(.vertical, 2)
                         .background(statusColor.opacity(0.1))
                         .foregroundStyle(statusColor)
                         .clipShape(Capsule())
 
-                    Text("Qty: \(order.quantity)")
+                    Text("Qty \(order.quantity)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-
-                    Text(formattedDate)
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
                 }
+
+                if let txId = order.razorpayPaymentId {
+                    Text(txId)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                }
+
+                Text(formattedDate)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
             }
 
             Spacer()
 
-            Text(String(format: "₹%.2f", order.totalAmount))
-                .font(.subheadline).fontWeight(.bold)
-                .foregroundStyle(Color.brand)
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(String(format: "$%.2f", order.totalAmount))
+                    .font(.subheadline).fontWeight(.bold)
+                    .foregroundStyle(amountColor)
+                    .strikethrough(order.status == "refunded", color: .gray)
+
+                if order.status == "refunded" {
+                    Text("Refunded")
+                        .font(.caption2).fontWeight(.medium)
+                        .foregroundStyle(.gray)
+                }
+            }
         }
         .padding(.vertical, 4)
     }
@@ -105,24 +148,31 @@ private struct OrderRow: View {
     private var statusIcon: String {
         switch order.status {
         case "pending":   return "clock"
-        case "paid":      return "creditcard"
-        case "shipped":   return "shippingbox"
-        case "delivered": return "checkmark.circle.fill"
-        case "cancelled": return "xmark.circle"
-        case "refunded":  return "arrow.uturn.left"
-        default:          return "questionmark"
+        case "paid":      return "checkmark.circle.fill"
+        case "shipped":   return "shippingbox.fill"
+        case "delivered": return "bag.fill.badge.checkmark"
+        case "cancelled": return "xmark.circle.fill"
+        case "refunded":  return "arrow.uturn.left.circle.fill"
+        default:          return "questionmark.circle"
         }
     }
 
     private var statusLabel: String { order.status.capitalized }
+
+    private var amountColor: Color {
+        switch order.status {
+        case "refunded":  return .gray
+        case "cancelled": return .red
+        default:          return Color.brand
+        }
+    }
 
     private var formattedDate: String {
         let iso = ISO8601DateFormatter()
         iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         guard let date = iso.date(from: order.createdAt) else { return "" }
         let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
+        formatter.dateFormat = "MMM d, h:mm a"
         return formatter.string(from: date)
     }
 }

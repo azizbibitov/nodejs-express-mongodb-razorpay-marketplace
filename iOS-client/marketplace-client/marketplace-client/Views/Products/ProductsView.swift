@@ -99,7 +99,7 @@ private struct ProductCard: View {
                 Text(product.name)
                     .font(.subheadline).fontWeight(.semibold)
                     .lineLimit(2)
-                Text(String(format: "₹%.2f", product.price))
+                Text(String(format: "$%.2f", product.price))
                     .font(.subheadline)
                     .foregroundStyle(Color.brand)
                     .fontWeight(.bold)

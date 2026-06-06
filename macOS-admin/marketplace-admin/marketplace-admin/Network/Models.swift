@@ -4,7 +4,7 @@ struct User: Codable, Identifiable {
     let id: String
     let name: String
     let email: String?
-    let role: String
+    let role: String?
 
     enum CodingKeys: String, CodingKey {
         case id = "_id"
@@ -38,10 +38,21 @@ struct Product: Codable, Identifiable {
     }
 }
 
+struct OrderProduct: Codable, Identifiable {
+    let id: String
+    let name: String
+    let price: Double
+
+    enum CodingKeys: String, CodingKey {
+        case id = "_id"
+        case name, price
+    }
+}
+
 struct Order: Codable, Identifiable {
     let id: String
     let buyer: User?
-    let product: Product?
+    let product: OrderProduct?
     let quantity: Int
     let totalAmount: Double
     var status: String

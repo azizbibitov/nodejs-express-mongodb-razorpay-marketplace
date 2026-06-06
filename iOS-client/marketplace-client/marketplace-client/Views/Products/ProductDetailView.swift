@@ -45,7 +45,7 @@ struct ProductDetailView: View {
                             .tracking(1)
                         Text(product.name)
                             .font(.title2).fontWeight(.bold)
-                        Text(String(format: "₹%.2f", product.price))
+                        Text(String(format: "$%.2f", product.price))
                             .font(.title3).fontWeight(.semibold)
                             .foregroundStyle(Color.brand)
                     }
@@ -97,7 +97,7 @@ struct ProductDetailView: View {
                         } else {
                             Text(product.stock == 0
                                  ? "Out of Stock"
-                                 : "Buy Now  ·  ₹\(String(format: "%.2f", product.price * Double(quantity)))")
+                                 : "Buy Now  ·  $\(String(format: "%.2f", product.price * Double(quantity)))")
                                 .fontWeight(.semibold)
                         }
                     }

@@ -82,7 +82,7 @@ struct ProductsView: View {
                     TableColumn("Category", value: \.category)
 
                     TableColumn("Price") { product in
-                        Text(String(format: "₹%.2f", product.price))
+                        Text(String(format: "$%.2f", product.price))
                             .monospacedDigit()
                     }
 

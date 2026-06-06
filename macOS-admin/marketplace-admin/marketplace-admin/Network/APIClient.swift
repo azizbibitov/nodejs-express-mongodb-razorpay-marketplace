@@ -90,7 +90,7 @@ class APIClient: ObservableObject {
     }
 
     func refundOrder(id: String) async throws {
-        let _: [String: String] = try await post("/payments/refund/\(id)", body: [:])
+        _ = try await request("/payments/refund/\(id)", method: "POST", body: [:])
     }
 
     // MARK: - HTTP helpers

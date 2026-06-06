@@ -42,11 +42,6 @@ struct MainTabView: View {
                     Label("Shop", systemImage: "storefront")
                 }
 
-            MyOrdersView()
-                .tabItem {
-                    Label("My Orders", systemImage: "bag")
-                }
-
             AccountView(user: user, onLogout: onLogout)
                 .tabItem {
                     Label("Account", systemImage: "person.circle")
@@ -63,29 +58,62 @@ struct AccountView: View {
     var body: some View {
         NavigationStack {
             List {
+                // Profile header
                 Section {
-                    HStack(spacing: 14) {
+                    VStack(spacing: 16) {
                         ZStack {
                             Circle()
-                                .fill(Color.brand.opacity(0.12))
-                                .frame(width: 52, height: 52)
+                                .fill(Color.brand)
+                                .frame(width: 80, height: 80)
                             Text(String(user.name.prefix(1)).uppercased())
-                                .font(.title2).fontWeight(.semibold)
-                                .foregroundStyle(Color.brand)
+                                .font(.system(size: 34, weight: .semibold))
+                                .foregroundStyle(.white)
                         }
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(user.name).font(.headline)
+                        VStack(spacing: 4) {
+                            Text(user.name)
+                                .font(.title3).fontWeight(.semibold)
                             if let email = user.email {
-                                Text(email).font(.caption).foregroundStyle(.secondary)
+                                Text(email)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
                             }
                         }
                     }
-                    .padding(.vertical, 4)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+                }
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets())
+
+                // Account info
+                if let email = user.email {
+                    Section("Personal Info") {
+                        LabeledContent {
+                            Text(email)
+                                .foregroundStyle(.secondary)
+                        } label: {
+                            Label("Email", systemImage: "envelope")
+                        }
+
+                        LabeledContent {
+                            Text("Buyer")
+                                .foregroundStyle(.secondary)
+                        } label: {
+                            Label("Account Type", systemImage: "person.badge.shield.checkmark")
+                        }
+                    }
+                }
+
+                Section("Activity") {
+                    NavigationLink(destination: MyOrdersView()) {
+                        Label("Transactions", systemImage: "creditcard")
+                    }
                 }
 
                 Section {
                     Button(role: .destructive, action: onLogout) {
                         Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                            .frame(maxWidth: .infinity, alignment: .center)
                     }
                 }
             }

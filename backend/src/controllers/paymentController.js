@@ -126,9 +126,16 @@ exports.refundPayment = async (req, res) => {
     return res.status(400).json({ message: 'Only paid orders can be refunded' });
   }
 
-  await razorpay.payments.refund(order.razorpayPaymentId, {
-    amount: Math.round(order.totalAmount * 100),
-  });
+  if (!order.razorpayPaymentId.startsWith('test_')) {
+    try {
+      await razorpay.payments.refund(order.razorpayPaymentId, {
+        amount: Math.round(order.totalAmount * 100),
+      });
+    } catch (err) {
+      console.error('Razorpay refund error:', err);
+      return res.status(502).json({ message: 'Refund gateway error. Check Razorpay credentials.' });
+    }
+  }
 
   order.status = 'refunded';
   await order.save();

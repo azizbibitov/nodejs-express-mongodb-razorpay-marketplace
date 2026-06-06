@@ -54,7 +54,7 @@ struct PaymentView: View {
                     Text("Total Amount")
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Text(String(format: "₹%.2f", order.totalAmount))
+                    Text(String(format: "$%.2f", order.totalAmount))
                         .font(.title3).fontWeight(.bold)
                         .foregroundStyle(Color.brand)
                 }
@@ -82,7 +82,7 @@ struct PaymentView: View {
                             ProgressView().tint(.white)
                         } else {
                             Image(systemName: "lock.fill")
-                            Text("Pay ₹\(String(format: "%.2f", order.totalAmount)) with Razorpay")
+                            Text("Pay $\(String(format: "%.2f", order.totalAmount)) with Razorpay")
                                 .fontWeight(.semibold)
                         }
                     }

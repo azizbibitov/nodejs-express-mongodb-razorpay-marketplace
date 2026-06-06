@@ -69,10 +69,11 @@ struct Order: Codable, Identifiable {
     let totalAmount: Double
     let status: String
     let createdAt: String
+    let razorpayPaymentId: String?
 
     enum CodingKeys: String, CodingKey {
         case id = "_id"
-        case product, quantity, totalAmount, status, createdAt
+        case product, quantity, totalAmount, status, createdAt, razorpayPaymentId
     }
 }
 
