@@ -92,6 +92,29 @@ exports.handleWebhook = async (req, res) => {
   res.json({ received: true });
 };
 
+// Dev-only: simulate a successful payment without Razorpay
+exports.testPay = async (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ message: 'Not found' });
+  }
+  const order = await Order.findById(req.body.orderId);
+  if (!order) return res.status(404).json({ message: 'Order not found' });
+  if (order.buyer.toString() !== req.user.id) {
+    return res.status(403).json({ message: 'Not your order' });
+  }
+  if (order.status !== 'pending') {
+    return res.status(400).json({ message: 'Order is not pending' });
+  }
+
+  order.status = 'paid';
+  order.razorpayPaymentId = 'test_' + Date.now();
+  await order.save();
+
+  await Product.findByIdAndUpdate(order.product, { $inc: { stock: -order.quantity } });
+
+  res.json({ message: 'Test payment successful', order });
+};
+
 // Seller can refund a paid order
 exports.refundPayment = async (req, res) => {
   const order = await Order.findById(req.params.orderId);

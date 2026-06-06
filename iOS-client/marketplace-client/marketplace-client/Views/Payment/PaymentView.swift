@@ -97,6 +97,13 @@ struct PaymentView: View {
                 Text("Secured by Razorpay")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
+
+                Button("Simulate Payment (Dev Only)") {
+                    simulatePayment()
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .disabled(isProcessing)
             }
             .padding(.bottom, 32)
         }
@@ -137,6 +144,20 @@ struct PaymentView: View {
                 .padding(.bottom, 32)
         }
         .background(Color(.systemGroupedBackground))
+    }
+
+    private func simulatePayment() {
+        isProcessing = true
+        errorMessage = ""
+        Task {
+            do {
+                try await APIClient.shared.testPay(orderId: order.id)
+                isPaid = true
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            isProcessing = false
+        }
     }
 
     private func startPayment() {
